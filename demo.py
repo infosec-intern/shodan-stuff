@@ -8,7 +8,10 @@ import pandas
 import shodan
 
 
-def _read_config(path="config.json"):
+logging.basicConfig(level=logging.DEBUG)
+
+
+def read_config(path="config.json"):
     ''' Read API info out of config file '''
     with open(path, "r") as ifile:
         return json.load(ifile)
@@ -30,12 +33,17 @@ def resolve_websites():
     }
     for host in hostnames:
         answer = socket.getaddrinfo(host, 0, 0, 0, 0)
-        for record in answer:
-            hostnames[host].append(record[-1][0])
+        hostnames[host] = [record[-1][0] for record in answer]
+        logging.debug("%s resolves to: %s", host, ", ".join(hostnames[host]))
     return hostnames
 
 
 if __name__ == "__main__":
-    CONFIG = _read_config()
+    CONFIG = read_config()
     api = shodan.Shodan(CONFIG["key"])
     websites = resolve_websites()
+    for host in websites:
+        for ip in websites[host]:
+            results = api.search(ip)
+            print(results)
+        break
