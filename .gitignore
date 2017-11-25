@@ -1,5 +1,7 @@
 # Custom stuff
-./venv
+venv
+.vscode
+config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
