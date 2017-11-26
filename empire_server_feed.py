@@ -9,7 +9,7 @@ import logging
 import shodan
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def read_config(path="config.json"):
@@ -24,8 +24,22 @@ def search(api):
     :api: Shodan search API
     '''
     query = 'title:"404 Not Found" + "Content-Length: 233"  + "Cache-Control: no-cache, no-store, must-revalidate" -"post-check=" -"pre-check=" -"private" + "Pragma: no-cache" + "Expires: 0" + "Server:" -"X-" -"Set-Cookie:" -"Connection:" -"Etag" -"Last-Modified" -"Accept-Ranges:" -"Access-Control"'
+    facets = {
+        "org": "Top 5 Organizations",
+        "domain": "Top 5 Domains",
+        "port": "Top 5 Ports",
+        "asn": "Top 5 ASNs",
+        "country": "Top 5 Countries",
+        "product": "Top 5 Servers",
+        "isp": "Top 5 ISPs"
+    }
+    results = api.count(query, facets=list(facets.keys()))
+    print("Total Results: {}".format(results["total"]))
+    for facet in results["facets"]:
+        print(facets[facet])
+        for term in results["facets"][facet]:
+            print("\t{}: {}".format(term["value"], term["count"]))
     results = api.search(query)
-    logging.info("Successfully found %d matches", results["total"])
     feed_data = []
     for result in results["matches"]:
         feed_data.append({
@@ -33,9 +47,9 @@ def search(api):
             "country": result["location"]["country_code"],
             "ip": result["ip_str"],
             "port": result["port"],
-            "ssl_fingerprint": result.get("ssl", {}).get("cert", {}).get("fingerprint", {}).get("sha256", {}),
-            "ssl_issued": result.get("ssl", {}).get("cert", {}).get("issued", {}),
-            "ssl_expires": result.get("ssl", {}).get("cert", {}).get("expires", {}),
+            # "ssl_fingerprint": result["ssl"]["cert"]["fingerprint"]["sha256"],
+            # "ssl_issued": result["ssl"]["cert"]["issued"],
+            # "ssl_expires": result["ssl"]["cert"]["expires"],
             "timestamp": result["timestamp"]
         })
         logging.debug("Added '%s' to feed", result["ip_str"])
@@ -57,8 +71,6 @@ def write_results(feed):
 
 if __name__ == "__main__":
     CONFIG = read_config()
-    # still trying to figure out what to do with these
-    FACETS = [ "org", "domain", "port", "asn", "country" ]
     API = shodan.Shodan(CONFIG["key"])
     FEED = search(API)
     write_results(FEED)
