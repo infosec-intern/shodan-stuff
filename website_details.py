@@ -42,8 +42,8 @@ if __name__ == "__main__":
     CONFIG = read_config()
     api = shodan.Shodan(CONFIG["key"])
     websites = resolve_websites()
-    for host in websites:
-        for ip in websites[host]:
+    for hostname in websites:
+        for ip in websites[hostname]:
             results = api.host(ip)
             print(results)
         break
