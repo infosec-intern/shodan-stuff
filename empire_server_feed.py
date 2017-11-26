@@ -68,7 +68,6 @@ def write_results(feed):
         for row in feed:
             csvfile.writerow(row)
 
-
 if __name__ == "__main__":
     CONFIG = read_config()
     API = shodan.Shodan(CONFIG["key"])
