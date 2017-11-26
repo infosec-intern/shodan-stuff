@@ -2,6 +2,8 @@
 venv
 .vscode
 config.json
+shodan-export.json.gz
+shodan_data.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
