@@ -9,7 +9,7 @@ import logging
 import shodan
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def read_config(path="config.json"):
@@ -39,9 +39,9 @@ def search(api):
         print(facets[facet])
         for term in results["facets"][facet]:
             print("\t{}: {}".format(term["value"], term["count"]))
-    results = api.search(query)
+    results = api.search_cursor(query)
     feed_data = []
-    for result in results["matches"]:
+    for result in results:
         feed_data.append({
             "city": result["location"]["city"],
             "country": result["location"]["country_code"],
@@ -63,7 +63,7 @@ def write_results(feed):
     '''
     with open("empire-http-listeners.csv", "w") as ofile:
         fields = sorted(list(feed[0].keys()))
-        csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
+        csvfile = csv.DictWriter(f=ofile, fieldnames=fields, newline='')
         csvfile.writeheader()
         for row in feed:
             csvfile.writerow(row)
