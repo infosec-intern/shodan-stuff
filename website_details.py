@@ -37,13 +37,12 @@ def resolve_websites():
         logging.debug("%s resolves to: %s", host, ", ".join(hostnames[host]))
     return hostnames
 
-
 if __name__ == "__main__":
     CONFIG = read_config()
-    api = shodan.Shodan(CONFIG["key"])
-    websites = resolve_websites()
-    for hostname in websites:
-        for ip in websites[hostname]:
-            results = api.host(ip)
-            print(results)
+    API = shodan.Shodan(CONFIG["key"])
+    WEBSITES = resolve_websites()
+    for hostname in WEBSITES:
+        for ip in WEBSITES[hostname]:
+            results = API.host(ip)
+            print(json.dumps(results, indent=2))
         break
