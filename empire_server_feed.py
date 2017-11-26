@@ -3,7 +3,6 @@ Generate a CSV feed from Shodan data on open Empire HTTP listeners
 Based on the following article: https://www.tenable.com/blog/identifying-empire-http-listeners
 '''
 import csv
-import ipaddress
 import json
 import logging
 
@@ -42,17 +41,17 @@ def search(api):
         logging.debug("Added '%s' to feed", result["ip_str"])
     return feed_data
 
-def write_results(feed_data):
+def write_results(feed):
     '''
     Write out Shodan results to a CSV file
 
-    :feed_data: list of results
+    :feed: list of results
     '''
     with open("empire-http-listeners.csv", "w") as ofile:
-        fields = sorted(list(feed_data[0].keys()))
+        fields = sorted(list(feed[0].keys()))
         csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
         csvfile.writeheader()
-        for row in feed_data:
+        for row in feed:
             csvfile.writerow(row)
 
 
@@ -60,6 +59,6 @@ if __name__ == "__main__":
     CONFIG = read_config()
     # still trying to figure out what to do with these
     FACETS = [ "org", "domain", "port", "asn", "country" ]
-    api = shodan.Shodan(CONFIG["key"])
-    feed_data = search(api)
-    write_results(feed_data)
+    API = shodan.Shodan(CONFIG["key"])
+    FEED = search(API)
+    write_results(FEED)
