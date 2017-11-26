@@ -26,22 +26,32 @@ def search(api):
     '''
     query = 'title:"404 Not Found" + "Content-Length: 233"  + "Cache-Control: no-cache, no-store, must-revalidate" -"post-check=" -"pre-check=" -"private" + "Pragma: no-cache" + "Expires: 0" + "Server:" -"X-" -"Set-Cookie:" -"Connection:" -"Etag" -"Last-Modified" -"Accept-Ranges:" -"Access-Control"'
     results = api.search(query)
-    print(results["total"])
+    logging.info("Successfully found %d matches", results["total"])
+    feed_data = []
     for result in results["matches"]:
-        ip = ipaddress.ip_address(result["ip"])
-        port = result["port"]
-        city = result["location"]["city"]
-        country = result["location"]["country_code"]
-        ssl_fingerprint = result["ssl"]["cert"]["fingerprint"]["sha256"]
-        ssl_issued = result["ssl"]["cert"]["issued"]
-        ssl_expires = result["ssl"]["cert"]["expires"]
-        raw_link = "https://www.shodan.io/host/{}".format(ip)
-    print(json.dumps(results["matches"][0], indent=2))
+        feed_data.append({
+            "city": result["location"]["city"],
+            "country": result["location"]["country_code"],
+            "ip": result["ip_str"],
+            "port": result["port"],
+            "ssl_fingerprint": result["ssl"]["cert"]["fingerprint"]["sha256"],
+            "ssl_issued": result["ssl"]["cert"]["issued"],
+            "ssl_expires": result["ssl"]["cert"]["expires"],
+            "timestamp": result["timestamp"],
+            "raw_link": "https://www.shodan.io/host/{}".format(result["ip_str"])
+        })
+        logging.debug("Added '%s' to feed", result["ip_str"])
+    return results["total"], feed_data
 
 if __name__ == "__main__":
     CONFIG = read_config()
-    CSV_FILENAME = "empire-http-listeners.csv"
-    CSV_FIELDS = [ "ipaddress", "port", "country", "added-on" ]
+    # still trying to figure out what to do with these
     FACETS = [ "org", "domain", "port", "asn", "country" ]
     api = shodan.Shodan(CONFIG["key"])
-    search(api)
+    total, feed_data = search(api)
+    with open("empire-http-listeners.csv", "w") as ofile:
+        fields = list(feed_data[0].keys())
+        csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
+        csvfile.writeheader()
+        for row in feed_data:
+            csvfile.writerow(row)
