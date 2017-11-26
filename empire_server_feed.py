@@ -61,9 +61,9 @@ def write_results(feed):
 
     :feed: list of results
     '''
-    with open("empire-http-listeners.csv", "w") as ofile:
+    with open("empire-http-listeners.csv", "w", newline='') as ofile:
         fields = sorted(list(feed[0].keys()))
-        csvfile = csv.DictWriter(f=ofile, fieldnames=fields, newline='')
+        csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
         csvfile.writeheader()
         for row in feed:
             csvfile.writerow(row)
