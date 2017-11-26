@@ -34,24 +34,32 @@ def search(api):
             "country": result["location"]["country_code"],
             "ip": result["ip_str"],
             "port": result["port"],
-            "ssl_fingerprint": result["ssl"]["cert"]["fingerprint"]["sha256"],
-            "ssl_issued": result["ssl"]["cert"]["issued"],
-            "ssl_expires": result["ssl"]["cert"]["expires"],
-            "timestamp": result["timestamp"],
-            "raw_link": "https://www.shodan.io/host/{}".format(result["ip_str"])
+            "ssl_fingerprint": result.get("ssl", {}).get("cert", {}).get("fingerprint", {}).get("sha256", {}),
+            "ssl_issued": result.get("ssl", {}).get("cert", {}).get("issued", {}),
+            "ssl_expires": result.get("ssl", {}).get("cert", {}).get("expires", {}),
+            "timestamp": result["timestamp"]
         })
         logging.debug("Added '%s' to feed", result["ip_str"])
-    return results["total"], feed_data
+    return feed_data
+
+def write_results(feed_data):
+    '''
+    Write out Shodan results to a CSV file
+
+    :feed_data: list of results
+    '''
+    with open("empire-http-listeners.csv", "w") as ofile:
+        fields = sorted(list(feed_data[0].keys()))
+        csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
+        csvfile.writeheader()
+        for row in feed_data:
+            csvfile.writerow(row)
+
 
 if __name__ == "__main__":
     CONFIG = read_config()
     # still trying to figure out what to do with these
     FACETS = [ "org", "domain", "port", "asn", "country" ]
     api = shodan.Shodan(CONFIG["key"])
-    total, feed_data = search(api)
-    with open("empire-http-listeners.csv", "w") as ofile:
-        fields = list(feed_data[0].keys())
-        csvfile = csv.DictWriter(f=ofile, fieldnames=fields)
-        csvfile.writeheader()
-        for row in feed_data:
-            csvfile.writerow(row)
+    feed_data = search(api)
+    write_results(feed_data)
