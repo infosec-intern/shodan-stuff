@@ -44,6 +44,6 @@ if __name__ == "__main__":
     websites = resolve_websites()
     for host in websites:
         for ip in websites[host]:
-            results = api.search(ip)
+            results = api.host(ip)
             print(results)
         break
